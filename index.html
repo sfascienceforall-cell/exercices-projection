@@ -1,7 +1,8 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
-body{background:#fff;font-family:system-ui,-apple-system,sans-serif;}
-canvas{display:block;border-radius:12px;border:1.5px solid #e8e8e8;touch-action:none;}
+body{background:#fff;font-family:system-ui,-apple-system,sans-serif;padding:4px;}
+canvas{display:block;}
+#cv{border-radius:12px;border:1.5px solid #e8e8e8;touch-action:none;width:100%;height:56vh;min-height:350px;}
 .fml{font-size:13px;padding:10px 16px;border-radius:20px;background:#f5f5f5;border:1.5px solid #d0d0d0;color:#2c2c2a;margin:6px 0;font-family:ui-monospace,monospace;line-height:1.8;}
 .row{display:flex;align-items:center;gap:8px;margin:6px 0;flex-wrap:wrap;}
 .pill{font-size:13px;font-weight:500;color:#2c2c2a;background:#f5f5f5;border:1.5px solid #d0d0d0;border-radius:20px;padding:6px 14px;white-space:nowrap;}
@@ -11,37 +12,63 @@ canvas{display:block;border-radius:12px;border:1.5px solid #e8e8e8;touch-action:
 .val{min-width:56px;text-align:center;font-size:13px;font-weight:500;color:#2c2c2a;background:#f5f5f5;border:1.5px solid #d0d0d0;border-radius:20px;padding:5px 10px;}
 .info{font-size:12px;padding:8px 14px;border-radius:20px;background:#f5f5f5;border:1.5px solid #d0d0d0;color:#555;margin:6px 0;font-family:ui-monospace,monospace;line-height:1.8;}
 input[type=range]{flex:1;min-width:100px;}
+/* ---- menu ---- */
+#menu h1{font-size:20px;font-weight:600;color:#2c2c2a;margin:10px 4px 2px;}
+#menu p.sub{font-size:13px;color:#888;margin:0 4px 14px;}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;padding-bottom:20px;}
+.card{border:1.5px solid #e8e8e8;border-radius:12px;overflow:hidden;cursor:pointer;background:#fff;transition:border-color .15s, box-shadow .15s, transform .15s;}
+.card:hover{border-color:#185fa5;box-shadow:0 4px 14px rgba(24,95,165,0.10);transform:translateY(-2px);}
+.card canvas{width:100%;height:auto;display:block;border-bottom:1.5px solid #f0f0f0;}
+.card .cap{padding:9px 12px 11px;}
+.card .t{font-size:13.5px;font-weight:600;color:#2c2c2a;line-height:1.3;}
+.card .lv{font-size:12px;margin-top:5px;display:inline-block;border-radius:20px;padding:2px 10px;border:1.5px solid;}
+.lv1{color:#0F6E56;border-color:#9FE1CB;background:#e7f6ef;}
+.lv2{color:#185fa5;border-color:#b5d4f4;background:#e6f1fb;}
+.lv3{color:#BA7517;border-color:#f5c88f;background:#fdf3e4;}
+.lv4{color:#a32d2d;border-color:#f09595;background:#fcebeb;}
+.num{font-size:11px;color:#9aa0a6;float:right;margin-top:6px;}
 </style>
 
-<canvas id="cv" style="width:100%;height:58vh;min-height:360px;"></canvas>
-
-<div class="fml" id="stmt"></div>
-
-<div class="row">
-  <button class="btn nav" onclick="go(-1)">◀ Précédent</button>
-  <span class="pill" id="cnt" style="border-color:#b5d4f4;color:#185fa5;"></span>
-  <button class="btn nav" onclick="go(1)">Suivant ▶</button>
-  <button class="btn" id="bSol" onclick="toggleSol()">Voir la solution</button>
-  <button class="btn" id="bAxes" style="display:none;border-color:#79c6a6;color:#0F6E56;" onclick="axesChoice=1-axesChoice;">Changer d'axes</button>
+<!-- ============ PAGE D'ACCUEIL ============ -->
+<div id="menu">
+  <h1>Projection de forces — 12 exercices animés</h1>
+  <p class="sub">Clique sur un exercice pour l'ouvrir. La difficulté monte progressivement (★ → ★★★★★).</p>
+  <div class="grid" id="grid"></div>
 </div>
 
-<div class="row" id="rowSl" style="display:none;">
-  <span class="pill" id="slLab" style="color:#BA7517;border-color:#f5c88f;"></span>
-  <input type="range" id="sl" style="accent-color:#BA7517;">
-  <span class="val" id="slV" style="color:#BA7517;border-color:#f5c88f;"></span>
+<!-- ============ VUE EXERCICE ============ -->
+<div id="exo" style="display:none;">
+  <div class="row">
+    <button class="btn nav" onclick="backMenu()">☰ Tous les exercices</button>
+    <button class="btn nav" onclick="go(-1)">◀</button>
+    <span class="pill" id="cnt" style="border-color:#b5d4f4;color:#185fa5;"></span>
+    <button class="btn nav" onclick="go(1)">▶</button>
+  </div>
+  <canvas id="cv"></canvas>
+  <div class="fml" id="stmt"></div>
+  <div class="row">
+    <button class="btn" id="bSol" onclick="toggleSol()">Voir la solution</button>
+    <button class="btn" id="bAxes" style="display:none;border-color:#79c6a6;color:#0F6E56;" onclick="axesChoice=1-axesChoice;">Changer d'axes</button>
+  </div>
+  <div class="row" id="rowSl" style="display:none;">
+    <span class="pill" id="slLab" style="color:#BA7517;border-color:#f5c88f;"></span>
+    <input type="range" id="sl" style="accent-color:#BA7517;">
+    <span class="val" id="slV" style="color:#BA7517;border-color:#f5c88f;"></span>
+  </div>
+  <div class="info" id="info"></div>
 </div>
-
-<div class="info" id="info"></div>
 
 <script>
-const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+const cvMain=document.getElementById('cv');
+let ctx=cvMain.getContext('2d');
 const RED='#E24B4A',BLUE='#378ADD',GREEN='#1D9E75',VIOLET='#7F77DD',C_X='#D85A30',ORANGE='#BA7517',INK='#3d3d3a',GREY='#9aa0a6',AX='#c8ccd0';
-let W=0,H=0,dpr=1,idx=0,reveal=false,p=0,axesChoice=0;
+let W=0,H=0,dpr=1,idx=0,reveal=false,p=0,axesChoice=0,view='menu';
 const D2R=Math.PI/180,f1=x=>x.toFixed(1);
 
-function syncSize(){const r=cv.getBoundingClientRect();dpr=window.devicePixelRatio||1;
+function syncSize(){const r=cvMain.getBoundingClientRect();dpr=window.devicePixelRatio||1;
   const nW=Math.round(r.width)||700,nH=Math.round(r.height)||380;
-  if(nW!==W||nH!==H){W=nW;H=nH;cv.width=W*dpr;cv.height=H*dpr;}ctx.setTransform(dpr,0,0,dpr,0,0);}
+  if(nW!==W||nH!==H||cvMain.width!==Math.round(nW*dpr)){W=nW;H=nH;cvMain.width=W*dpr;cvMain.height=H*dpr;}
+  ctx.setTransform(dpr,0,0,dpr,0,0);}
 
 function arrow(x,y,vx,vy,col,lab,w,dash){const len=Math.hypot(vx,vy);if(len<3)return;const ex=x+vx,ey=y+vy;
   ctx.strokeStyle=col;ctx.lineWidth=w||2.5;ctx.lineCap='round';if(dash)ctx.setLineDash(dash);
@@ -50,7 +77,6 @@ function arrow(x,y,vx,vy,col,lab,w,dash){const len=Math.hypot(vx,vy);if(len<3)re
   ctx.beginPath();ctx.moveTo(hs,0);ctx.lineTo(-hs*0.7,-hs*0.55);ctx.lineTo(-hs*0.7,hs*0.55);ctx.closePath();ctx.fill();ctx.restore();
   if(lab){ctx.font='600 13px system-ui';ctx.textAlign='center';ctx.fillStyle=col;ctx.fillText(lab,ex+vx/len*16,ey+vy/len*16+5);}}
 
-// axes 2D standards avec graduations tous les 5 N
 function axes2(O,kF,name1,name2){
   ctx.strokeStyle=AX;ctx.lineWidth=1.5;
   const xr=Math.min(W-16-O.x,12.5*kF),xl=Math.min(O.x-16,12.5*kF);
@@ -65,7 +91,6 @@ function axes2(O,kF,name1,name2){
   [-10,-5,5,10].forEach(t=>{const px=O.x+t*kF;if(px>O.x-xl&&px<O.x+xr){ctx.strokeStyle='#dfe3e7';ctx.beginPath();ctx.moveTo(px,O.y-3);ctx.lineTo(px,O.y+3);ctx.stroke();ctx.fillStyle=GREY;ctx.fillText(t,px,O.y+13);}
     const py=O.y-t*kF;if(py>O.y-yu&&py<O.y+yd){ctx.strokeStyle='#dfe3e7';ctx.beginPath();ctx.moveTo(O.x-3,py);ctx.lineTo(O.x+3,py);ctx.stroke();ctx.fillStyle=GREY;ctx.fillText(t,O.x-11,py+3);}});
 }
-// axes selon 2 directions physiques quelconques (u1,u2), y-monte
 function axesU(O,kF,u1,u2,name1,name2,len){
   const L=len||11*kF;
   [[u1,name1],[u2,name2]].forEach(A=>{const u=A[0];
@@ -77,7 +102,6 @@ function axesU(O,kF,u1,u2,name1,name2,len){
     ctx.fillStyle=GREY;ctx.font='600 12px system-ui';ctx.textAlign='center';
     ctx.fillText(A[1],O.x+sx*(L+14),O.y+sy*(L+14)+4);});
 }
-// décomposition animée : v physique projeté sur u1,u2 ; retourne composantes
 function projAnim(O,kF,vx,vy,u1,u2,pp,lab1,lab2){
   const c1=vx*u1.x+vy*u1.y,c2=vx*u2.x+vy*u2.y;
   const S=v=>({x:O.x+v.x*kF,y:O.y-v.y*kF});
@@ -96,7 +120,6 @@ function arcA(O,r,a0,a1,lab,col){ctx.strokeStyle=col||GREY;ctx.lineWidth=1.4;
   if(lab){const am=(a0+a1)/2;ctx.fillStyle=col||GREY;ctx.font='600 12px system-ui';ctx.textAlign='center';
     ctx.fillText(lab,O.x+(r+13)*Math.cos(am),O.y+(r+13)*Math.sin(am)+4);}}
 
-// ---------- scène plan incliné ----------
 function incline(th){
   const gy=H*0.80,x0=W*0.10;
   const Lb=Math.min(W*0.62,(H*0.58)/Math.tan(th));
@@ -113,7 +136,6 @@ function incline(th){
   ctx.beginPath();ctx.roundRect(-b,-2*b,2*b,2*b,5);ctx.fill();ctx.stroke();ctx.restore();
   return {C:C,u:{x:Math.cos(th),y:Math.sin(th)},n:{x:-Math.sin(th),y:Math.cos(th)},kF:H*0.0145};
 }
-// ---------- scène pendule ----------
 function pendule(th){
   const PV={x:W*0.5,y:H*0.10},Lp=H*0.42;
   ctx.strokeStyle=INK;ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(PV.x-56,PV.y);ctx.lineTo(PV.x+56,PV.y);ctx.stroke();
@@ -152,7 +174,7 @@ const EX=[
  draw:function(pp){const al=this.sl.val*D2R,O={x:W*0.40,y:H*0.62},kF=Math.min(W,H)*0.026;axes2(O,kF);
    arcA(O,40,-Math.PI/2,-Math.PI/2+al,'α');const v={x:10*Math.sin(al),y:10*Math.cos(al)};
    arrow(O.x,O.y,v.x*kF,-v.y*kF,RED,'F̄',3.4);projAnim(O,kF,v.x,v.y,{x:1,y:0},{x:0,y:1},pp,'Fₓ','F_y');},
- sol:function(){const al=this.sl.val*D2R;return 'L\'angle est mesuré depuis <b>y</b> : le côté adjacent est sur y ! <b style="color:'+C_X+'">Fₓ = F·<u>sin</u>α = '+f1(10*Math.sin(al))+' N</b> ; <b style="color:'+VIOLET+'">F_y = F·<u>cos</u>α = '+f1(10*Math.cos(al))+' N</b>. Toujours regarder <b>de quel axe part l\'angle</b>, pas appliquer cos→x par réflexe.';}},
+ sol:function(){const al=this.sl.val*D2R;return 'L\'angle est mesuré depuis <b>y</b> : le côté adjacent est sur y ! <b style="color:'+C_X+'">Fₓ = F·<u>sin</u>α = '+f1(10*Math.sin(al))+' N</b> ; <b style="color:'+VIOLET+'">F_y = F·<u>cos</u>α = '+f1(10*Math.cos(al))+' N</b>. Toujours regarder <b>de quel axe part l\'angle</b>.';}},
 
 {t:'Signes : 2ᵉ quadrant',s:2,sl:{lab:'θ',min:95,max:175,step:1,val:135,unit:'°'},
  st:'<b style="color:#E24B4A">F = 10 N</b>, θ &gt; 90° (mesuré depuis +x). Quels <b>signes</b> pour Fₓ et F_y ?',
@@ -205,7 +227,7 @@ const EX=[
    arrow(sc.C.x,sc.C.y,v.x*sc.kF,-v.y*sc.kF,GREEN,'F̄',3.4);
    arcA(sc.C,44,-th,-th-al,'α',GREEN);
    projAnim(sc.C,sc.kF,v.x,v.y,sc.u,sc.n,pp,'Fₓ','F_y');},
- sol:function(){const al=this.sl.val*D2R;return 'Dans le repère de la pente, F̄ fait simplement l\'angle α avec l\'axe x : <b style="color:'+C_X+'">Fₓ = F·cosα = '+f1(12*Math.cos(al))+' N</b> (monte le bloc) ; <b style="color:'+VIOLET+'">F_y = F·sinα = '+f1(12*Math.sin(al))+' N</b> (soulage la pente → N̄ diminue !). L\'angle θ de la pente n\'apparaît pas : il est déjà « absorbé » par le choix des axes.';}},
+ sol:function(){const al=this.sl.val*D2R;return 'Dans le repère de la pente, F̄ fait simplement l\'angle α avec l\'axe x : <b style="color:'+C_X+'">Fₓ = F·cosα = '+f1(12*Math.cos(al))+' N</b> (monte le bloc) ; <b style="color:'+VIOLET+'">F_y = F·sinα = '+f1(12*Math.sin(al))+' N</b> (soulage la pente → N̄ diminue !). L\'angle θ n\'apparaît pas : il est déjà « absorbé » par le choix des axes.';}},
 
 {t:'Pendule — axes tangent / fil',s:4,sl:{lab:'θ',min:10,max:70,step:1,val:35,unit:'°'},
  st:'Le fil d\'un pendule fait un angle θ avec la verticale. Projette le poids <b style="color:#378ADD">P̄ = 20 N</b> sur l\'axe <b>x tangent</b> à la trajectoire et l\'axe <b>y le long du fil</b> (vers le pivot).',
@@ -213,7 +235,7 @@ const EX=[
    axesU(sc.C,sc.kF,sc.ut,sc.ur,'x (tangent)','y (fil)',H*0.15);
    arrow(sc.C.x,sc.C.y,0,20*sc.kF,BLUE,'P̄',3.4);
    projAnim(sc.C,sc.kF,0,-20,sc.ut,sc.ur,pp,'Pₓ','P_y');},
- sol:function(){const th=this.sl.val*D2R;return 'Même géométrie que le plan incliné ! <b style="color:'+C_X+'">Pₓ = −P·sinθ = '+f1(-20*Math.sin(th))+' N</b> : c\'est la <b>force de rappel</b> qui ramène le pendule. <b style="color:'+VIOLET+'">P_y = −P·cosθ = '+f1(-20*Math.cos(th))+' N</b> : compensée (en partie) par la tension T̄ le long du fil.';}},
+ sol:function(){const th=this.sl.val*D2R;return 'Même géométrie que le plan incliné ! <b style="color:'+C_X+'">Pₓ = −P·sinθ = '+f1(-20*Math.sin(th))+' N</b> : c\'est la <b>force de rappel</b> qui ramène le pendule. <b style="color:'+VIOLET+'">P_y = −P·cosθ = '+f1(-20*Math.cos(th))+' N</b> : compensée (en partie) par la tension T̄.';}},
 
 {t:'SYNTHÈSE : bilan complet sur la pente',s:5,sl:{lab:'θ',min:15,max:40,step:1,val:30,unit:'°'},
  st:'Bloc sur pente d\'angle θ : poids <b style="color:#378ADD">P̄=20 N</b>, normale <b style="color:#7F77DD">N̄</b>, traction <b style="color:#1D9E75">F̄=8 N</b> et frottement <b style="color:#BA7517">f̄=3 N</b>, tous deux vers le haut de la pente. Projette tout sur les axes de la pente et calcule <b>ΣFₓ</b> et <b>ΣF_y</b>.',
@@ -229,7 +251,38 @@ const EX=[
    return 'Seul P̄ doit être projeté (N̄, F̄, f̄ sont déjà sur les axes !) : Pₓ=−'+f1(Ps)+' N, P_y=−'+f1(Pc)+' N.<br><b style="color:'+C_X+'">ΣFₓ = F + f − P·sinθ = 8 + 3 − '+f1(Ps)+' = '+f1(8+3-Ps)+' N</b> → '+((8+3-Ps)>0?'le bloc accélère vers le <b>haut</b> de la pente':'le bloc accélère vers le <b>bas</b> de la pente (la traction ne suffit pas)')+'.<br><b style="color:'+VIOLET+'">ΣF_y = N − P·cosθ = 0 ⇒ N = '+f1(Pc)+' N</b> (pas de mouvement ⟂ à la pente).';}}
 ];
 
-// ================= UI =================
+// ================= MENU (cartes + aperçus) =================
+const LV=[['Niveau ★','lv1'],['Niveau ★★','lv1'],['Niveau ★★★','lv2'],['Niveau ★★★★','lv3'],['Niveau ★★★★★','lv4']];
+function buildMenu(){
+  const grid=document.getElementById('grid');
+  const mainCtx=ctx,mW=W,mH=H;
+  EX.forEach(function(ex,i){
+    const card=document.createElement('div');card.className='card';
+    const pcv=document.createElement('canvas');pcv.width=520;pcv.height=330;
+    // rendu de l'aperçu : on redirige temporairement le contexte global
+    ctx=pcv.getContext('2d');W=520;H=330;
+    ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);
+    try{ex.draw(1);}catch(e){}
+    const cap=document.createElement('div');cap.className='cap';
+    const lv=LV[ex.s-1];
+    cap.innerHTML='<span class="num">n°'+(i+1)+'</span><div class="t">'+ex.t+'</div><span class="lv '+lv[1]+'">'+lv[0]+'</span>';
+    card.appendChild(pcv);card.appendChild(cap);
+    card.addEventListener('click',function(){openEx(i);});
+    grid.appendChild(card);
+  });
+  ctx=mainCtx;W=mW;H=mH;
+}
+
+// ================= NAVIGATION =================
+function openEx(i){idx=i;view='exo';reveal=false;p=0;axesChoice=0;
+  document.getElementById('menu').style.display='none';
+  document.getElementById('exo').style.display='block';
+  document.getElementById('bSol').className='btn';document.getElementById('bSol').textContent='Voir la solution';
+  W=0;H=0; // force resync du canvas
+  refreshUI();window.scrollTo(0,0);}
+function backMenu(){view='menu';
+  document.getElementById('exo').style.display='none';
+  document.getElementById('menu').style.display='block';window.scrollTo(0,0);}
 function refreshUI(){const ex=EX[idx];
   document.getElementById('cnt').textContent='Exercice '+(idx+1)+'/12 — '+ex.t+' '+'★'.repeat(ex.s);
   document.getElementById('stmt').innerHTML=ex.st;
@@ -240,23 +293,23 @@ function refreshUI(){const ex=EX[idx];
     document.getElementById('slLab').textContent=ex.sl.lab;
     document.getElementById('slV').textContent=ex.sl.val+ex.sl.unit;
   } else rs.style.display='none';
-  updateInfo();
-}
+  updateInfo();}
 function updateInfo(){const ex=EX[idx];
-  document.getElementById('info').innerHTML=reveal?ex.sol():'À toi : écris les composantes sur papier, puis clique « Voir la solution » pour voir la décomposition animée.';
-}
+  document.getElementById('info').innerHTML=reveal?ex.sol():'À toi : écris les composantes sur papier, puis clique « Voir la solution » pour voir la décomposition animée.';}
 function go(d){idx=(idx+12+d)%12;reveal=false;p=0;axesChoice=0;
   document.getElementById('bSol').className='btn';document.getElementById('bSol').textContent='Voir la solution';refreshUI();}
-function toggleSol(){reveal=!reveal;p=reveal?0:0;
+function toggleSol(){reveal=!reveal;p=0;
   const b=document.getElementById('bSol');b.className=reveal?'btn on':'btn';b.textContent=reveal?'Cacher la solution':'Voir la solution';
   updateInfo();}
 document.getElementById('sl').addEventListener('input',e=>{const ex=EX[idx];if(!ex.sl)return;
   ex.sl.val=parseFloat(e.target.value);document.getElementById('slV').textContent=ex.sl.val+ex.sl.unit;if(reveal)updateInfo();});
-window.addEventListener('keydown',e=>{if(e.key==='ArrowRight')go(1);if(e.key==='ArrowLeft')go(-1);});
+window.addEventListener('keydown',e=>{if(view!=='exo')return;
+  if(e.key==='ArrowRight')go(1);if(e.key==='ArrowLeft')go(-1);if(e.key==='Escape')backMenu();});
 
-function draw(){syncSize();ctx.clearRect(0,0,W,H);ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);
-  if(reveal&&p<1)p=Math.min(1,p+0.03);
-  EX[idx].draw(p);
-  requestAnimationFrame(draw);}
-refreshUI();draw();
+function loop(){
+  if(view==='exo'){syncSize();ctx.clearRect(0,0,W,H);ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);
+    if(reveal&&p<1)p=Math.min(1,p+0.03);
+    EX[idx].draw(p);}
+  requestAnimationFrame(loop);}
+buildMenu();loop();
 </script>
