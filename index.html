@@ -2,8 +2,8 @@
 *{box-sizing:border-box;margin:0;padding:0;}
 body{background:#fff;font-family:system-ui,-apple-system,sans-serif;padding:4px;}
 canvas{display:block;}
-#cv{border-radius:12px;border:1.5px solid #e8e8e8;touch-action:none;width:100%;height:56vh;min-height:350px;}
-.fml{font-size:13px;padding:10px 16px;border-radius:20px;background:#f5f5f5;border:1.5px solid #d0d0d0;color:#2c2c2a;margin:6px 0;font-family:ui-monospace,monospace;line-height:1.8;}
+#cv{border-radius:12px;border:1.5px solid #e8e8e8;touch-action:none;width:100%;height:54vh;min-height:340px;}
+.fml{font-size:13px;padding:10px 16px;border-radius:20px;background:#f5f5f5;border:1.5px solid #d0d0d0;color:#2c2c2a;margin:6px 0;font-family:ui-monospace,monospace;line-height:1.7;}
 .row{display:flex;align-items:center;gap:8px;margin:6px 0;flex-wrap:wrap;}
 .pill{font-size:13px;font-weight:500;color:#2c2c2a;background:#f5f5f5;border:1.5px solid #d0d0d0;border-radius:20px;padding:6px 14px;white-space:nowrap;}
 .btn{padding:7px 16px;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;border:1.5px solid #d0d0d0;background:#fff;color:#2c2c2a;}
@@ -12,7 +12,6 @@ canvas{display:block;}
 .val{min-width:56px;text-align:center;font-size:13px;font-weight:500;color:#2c2c2a;background:#f5f5f5;border:1.5px solid #d0d0d0;border-radius:20px;padding:5px 10px;}
 .info{font-size:12px;padding:8px 14px;border-radius:20px;background:#f5f5f5;border:1.5px solid #d0d0d0;color:#555;margin:6px 0;font-family:ui-monospace,monospace;line-height:1.8;}
 input[type=range]{flex:1;min-width:100px;}
-/* ---- menu ---- */
 #menu h1{font-size:20px;font-weight:600;color:#2c2c2a;margin:10px 4px 2px;}
 #menu p.sub{font-size:13px;color:#888;margin:0 4px 14px;}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;padding-bottom:20px;}
@@ -29,14 +28,12 @@ input[type=range]{flex:1;min-width:100px;}
 .num{font-size:11px;color:#9aa0a6;float:right;margin-top:6px;}
 </style>
 
-<!-- ============ PAGE D'ACCUEIL ============ -->
 <div id="menu">
-  <h1>Projection de forces — 15 exercices animés</h1>
+  <h1>Moments de force — 9 exercices animés</h1>
   <p class="sub">Clique sur un exercice pour l'ouvrir. La difficulté monte progressivement (★ → ★★★★★).</p>
   <div class="grid" id="grid"></div>
 </div>
 
-<!-- ============ VUE EXERCICE ============ -->
 <div id="exo" style="display:none;">
   <div class="row">
     <button class="btn nav" onclick="backMenu()">☰ Tous les exercices</button>
@@ -46,10 +43,7 @@ input[type=range]{flex:1;min-width:100px;}
   </div>
   <canvas id="cv"></canvas>
   <div class="fml" id="stmt"></div>
-  <div class="row">
-    <button class="btn" id="bSol" onclick="toggleSol()">Voir la solution</button>
-    <button class="btn" id="bAxes" style="display:none;border-color:#79c6a6;color:#0F6E56;" onclick="axesChoice=1-axesChoice;">Changer d'axes</button>
-  </div>
+  <div class="row"><button class="btn" id="bSol" onclick="toggleSol()">Voir la solution</button></div>
   <div class="row" id="rowSl" style="display:none;">
     <span class="pill" id="slLab" style="color:#BA7517;border-color:#f5c88f;"></span>
     <input type="range" id="sl" style="accent-color:#BA7517;">
@@ -59,348 +53,138 @@ input[type=range]{flex:1;min-width:100px;}
 </div>
 
 <script>
-const cvMain=document.getElementById('cv');
-let ctx=cvMain.getContext('2d');
-const RED='#E24B4A',BLUE='#378ADD',GREEN='#1D9E75',VIOLET='#7F77DD',C_X='#D85A30',ORANGE='#BA7517',INK='#3d3d3a',GREY='#9aa0a6',AX='#c8ccd0';
-let W=0,H=0,dpr=1,idx=0,reveal=false,p=0,axesChoice=0,view='menu';
-const D2R=Math.PI/180,f1=x=>x.toFixed(1);
-
+const cvMain=document.getElementById('cv');let ctx=cvMain.getContext('2d');
+const RED='#E24B4A',DRED='#a32d2d',BLUE='#378ADD',BLUE_D='#185fa5',GREEN='#1D9E75',ORANGE='#BA7517',VIOLET='#7F77DD',GREY='#9aa0a6',AX='#c8ccd0',INK='#3d3d3a';
+let W=0,H=0,dpr=1,idx=0,reveal=false,p=0,view='menu',tGlob=0;const D2R=Math.PI/180;
 function syncSize(){const r=cvMain.getBoundingClientRect();dpr=window.devicePixelRatio||1;
-  const nW=Math.round(r.width)||700,nH=Math.round(r.height)||380;
-  if(nW!==W||nH!==H||cvMain.width!==Math.round(nW*dpr)){W=nW;H=nH;cvMain.width=W*dpr;cvMain.height=H*dpr;}
-  ctx.setTransform(dpr,0,0,dpr,0,0);}
-
-function arrow(x,y,vx,vy,col,lab,w,dash){const len=Math.hypot(vx,vy);if(len<3)return;const ex=x+vx,ey=y+vy;
+  const nW=Math.round(r.width)||700,nH=Math.round(r.height)||360;
+  if(nW!==W||nH!==H||cvMain.width!==Math.round(nW*dpr)){W=nW;H=nH;cvMain.width=W*dpr;cvMain.height=H*dpr;}ctx.setTransform(dpr,0,0,dpr,0,0);}
+function arrow(x,y,vx,vy,col,lab,w,dash){const len=Math.hypot(vx,vy);if(len<2)return;const ex=x+vx,ey=y+vy;
   ctx.strokeStyle=col;ctx.lineWidth=w||2.5;ctx.lineCap='round';if(dash)ctx.setLineDash(dash);
   ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(ex,ey);ctx.stroke();ctx.setLineDash([]);
   const hs=(w||2.5)*3.2,ang=Math.atan2(vy,vx);ctx.fillStyle=col;ctx.save();ctx.translate(ex,ey);ctx.rotate(ang);
   ctx.beginPath();ctx.moveTo(hs,0);ctx.lineTo(-hs*0.7,-hs*0.55);ctx.lineTo(-hs*0.7,hs*0.55);ctx.closePath();ctx.fill();ctx.restore();
   if(lab){ctx.font='600 13px system-ui';ctx.textAlign='center';ctx.fillStyle=col;ctx.fillText(lab,ex+vx/len*16,ey+vy/len*16+5);}}
+function pivot(x,y,lab){ctx.fillStyle=INK;ctx.beginPath();ctx.arc(x,y,5,0,7);ctx.fill();ctx.fillStyle=GREY;ctx.font='12px system-ui';ctx.textAlign='left';ctx.fillText(lab||'O',x+7,y+14);}
+function foot(O,A,dir){const AO={x:O.x-A.x,y:O.y-A.y},t=AO.x*dir.x+AO.y*dir.y;return {x:A.x+t*dir.x,y:A.y+t*dir.y,t:t};}
+function rot(u,ang){const c=Math.cos(ang),s=Math.sin(ang);return {x:u.x*c-u.y*s,y:u.x*s+u.y*c};}
+function cle(theta,showSol){const O={x:W*0.30,y:H*0.60},L=W*0.30,A={x:O.x+L,y:O.y};
+  ctx.strokeStyle=INK;ctx.lineWidth=6;ctx.beginPath();ctx.moveTo(O.x-10,O.y);ctx.lineTo(A.x,A.y);ctx.stroke();
+  ctx.fillStyle=INK;ctx.beginPath();ctx.arc(O.x,O.y,10,0,7);ctx.fill();ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(O.x,O.y,4,0,7);ctx.fill();
+  pivot(O.x,O.y);ctx.fillStyle=BLUE_D;ctx.font='600 12px system-ui';ctx.textAlign='center';ctx.fillText('d = 0,20 m',(O.x+A.x)/2,O.y+22);
+  const fdir=rot({x:-1,y:0},-theta*D2R);arrow(A.x,A.y,fdir.x*70,fdir.y*70,RED,'F̄ = 10 N',3.2);
+  if(theta>1){ctx.strokeStyle=GREY;ctx.lineWidth=1.3;ctx.beginPath();ctx.arc(A.x,A.y,24,Math.PI,Math.PI-theta*D2R,true);ctx.stroke();
+    ctx.fillStyle=GREY;ctx.font='11px system-ui';ctx.fillText(theta+'°',A.x-30,A.y-12);}
+  if(showSol){const H0=foot(O,A,fdir);
+    ctx.strokeStyle='#d8b0b0';ctx.setLineDash([5,5]);ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(A.x-fdir.x*50,A.y-fdir.y*50);ctx.lineTo(H0.x+fdir.x*30,H0.y+fdir.y*30);ctx.stroke();ctx.setLineDash([]);
+    ctx.strokeStyle=GREEN;ctx.lineWidth=2.4;ctx.beginPath();ctx.moveTo(O.x,O.y);ctx.lineTo(H0.x,H0.y);ctx.stroke();
+    ctx.fillStyle=GREEN;ctx.font='600 11px ui-monospace';ctx.fillText('bras d·sinθ',(O.x+H0.x)/2,(O.y+H0.y)/2-6);}}
 
-function axes2(O,kF,name1,name2){
-  ctx.strokeStyle=AX;ctx.lineWidth=1.5;
-  const xr=Math.min(W-16-O.x,12.5*kF),xl=Math.min(O.x-16,12.5*kF);
-  const yu=Math.min(O.y-16,12.5*kF),yd=Math.min(H-16-O.y,12.5*kF);
-  ctx.beginPath();ctx.moveTo(O.x-xl,O.y);ctx.lineTo(O.x+xr,O.y);ctx.moveTo(O.x,O.y+yd);ctx.lineTo(O.x,O.y-yu);ctx.stroke();
-  ctx.fillStyle=AX;
-  ctx.beginPath();ctx.moveTo(O.x+xr,O.y);ctx.lineTo(O.x+xr-8,O.y-4);ctx.lineTo(O.x+xr-8,O.y+4);ctx.closePath();ctx.fill();
-  ctx.beginPath();ctx.moveTo(O.x,O.y-yu);ctx.lineTo(O.x-4,O.y-yu+8);ctx.lineTo(O.x+4,O.y-yu+8);ctx.closePath();ctx.fill();
-  ctx.fillStyle=GREY;ctx.font='600 12px system-ui';ctx.textAlign='left';
-  ctx.fillText(name1||'x',O.x+xr-12,O.y+16);ctx.fillText(name2||'y',O.x+10,O.y-yu+12);
-  ctx.font='9px ui-monospace,monospace';ctx.textAlign='center';
-  [-10,-5,5,10].forEach(t=>{const px=O.x+t*kF;if(px>O.x-xl&&px<O.x+xr){ctx.strokeStyle='#dfe3e7';ctx.beginPath();ctx.moveTo(px,O.y-3);ctx.lineTo(px,O.y+3);ctx.stroke();ctx.fillStyle=GREY;ctx.fillText(t,px,O.y+13);}
-    const py=O.y-t*kF;if(py>O.y-yu&&py<O.y+yd){ctx.strokeStyle='#dfe3e7';ctx.beginPath();ctx.moveTo(O.x-3,py);ctx.lineTo(O.x+3,py);ctx.stroke();ctx.fillStyle=GREY;ctx.fillText(t,O.x-11,py+3);}});
-}
-function axesU(O,kF,u1,u2,name1,name2,len){
-  const L=len||11*kF;
-  [[u1,name1],[u2,name2]].forEach(A=>{const u=A[0];
-    const sx=u.x,sy=-u.y;
-    ctx.strokeStyle=AX;ctx.lineWidth=1.5;ctx.beginPath();
-    ctx.moveTo(O.x-sx*L*0.55,O.y-sy*L*0.55);ctx.lineTo(O.x+sx*L,O.y+sy*L);ctx.stroke();
-    ctx.fillStyle=AX;const ang=Math.atan2(sy,sx);ctx.save();ctx.translate(O.x+sx*L,O.y+sy*L);ctx.rotate(ang);
-    ctx.beginPath();ctx.moveTo(8,0);ctx.lineTo(-4,-5);ctx.lineTo(-4,5);ctx.closePath();ctx.fill();ctx.restore();
-    ctx.fillStyle=GREY;ctx.font='600 12px system-ui';ctx.textAlign='center';
-    ctx.fillText(A[1],O.x+sx*(L+14),O.y+sy*(L+14)+4);});
-}
-function projAnim(O,kF,vx,vy,u1,u2,pp,lab1,lab2){
-  const c1=vx*u1.x+vy*u1.y,c2=vx*u2.x+vy*u2.y;
-  const S=v=>({x:O.x+v.x*kF,y:O.y-v.y*kF});
-  const tip=S({x:vx,y:vy}),F1=S({x:c1*u1.x,y:c1*u1.y}),F2=S({x:c2*u2.x,y:c2*u2.y});
-  if(pp>0){
-    ctx.strokeStyle='#b9bdc4';ctx.setLineDash([4,4]);ctx.lineWidth=1.2;
-    ctx.beginPath();ctx.moveTo(tip.x,tip.y);ctx.lineTo(tip.x+(F1.x-tip.x)*pp,tip.y+(F1.y-tip.y)*pp);ctx.stroke();
-    ctx.beginPath();ctx.moveTo(tip.x,tip.y);ctx.lineTo(tip.x+(F2.x-tip.x)*pp,tip.y+(F2.y-tip.y)*pp);ctx.stroke();ctx.setLineDash([]);
-    arrow(O.x,O.y,(F1.x-O.x)*pp,(F1.y-O.y)*pp,C_X,pp>0.75?lab1:'',3);
-    arrow(O.x,O.y,(F2.x-O.x)*pp,(F2.y-O.y)*pp,VIOLET,pp>0.75?lab2:'',3);
-  }
-  return {c1,c2};
-}
-function arcA(O,r,a0,a1,lab,col){ctx.strokeStyle=col||GREY;ctx.lineWidth=1.4;
-  ctx.beginPath();ctx.arc(O.x,O.y,r,a0,a1,a1<a0);ctx.stroke();
-  if(lab){const am=(a0+a1)/2;ctx.fillStyle=col||GREY;ctx.font='600 12px system-ui';ctx.textAlign='center';
-    ctx.fillText(lab,O.x+(r+13)*Math.cos(am),O.y+(r+13)*Math.sin(am)+4);}}
-
-function incline(th){
-  const gy=H*0.80,x0=W*0.10;
-  const Lb=Math.min(W*0.62,(H*0.58)/Math.tan(th));
-  const A={x:x0,y:gy},B={x:x0+Lb,y:gy-Lb*Math.tan(th)};
-  ctx.strokeStyle=AX;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x0-8,gy);ctx.lineTo(x0+Lb+50,gy);ctx.stroke();
-  ctx.lineWidth=1;for(let hx=x0;hx<x0+Lb+50;hx+=15){ctx.beginPath();ctx.moveTo(hx,gy);ctx.lineTo(hx-8,gy+9);ctx.stroke();}
-  ctx.strokeStyle=INK;ctx.lineWidth=2.5;ctx.beginPath();ctx.moveTo(A.x,A.y);ctx.lineTo(B.x,B.y);ctx.stroke();
-  arcA(A,34,0,-th,'θ');
-  const fr=0.55,P={x:A.x+(B.x-A.x)*fr,y:A.y+(B.y-A.y)*fr};
-  const dir={x:Math.cos(th),y:-Math.sin(th)},ns={x:dir.y,y:-dir.x};
-  const b=16,C={x:P.x+ns.x*b,y:P.y+ns.y*b};
-  ctx.save();ctx.translate(P.x,P.y);ctx.rotate(-th);
-  ctx.fillStyle='#eef4fb';ctx.strokeStyle='#185fa5';ctx.lineWidth=2;
-  ctx.beginPath();ctx.roundRect(-b,-2*b,2*b,2*b,5);ctx.fill();ctx.stroke();ctx.restore();
-  return {C:C,u:{x:Math.cos(th),y:Math.sin(th)},n:{x:-Math.sin(th),y:Math.cos(th)},kF:H*0.0145};
-}
-function pendule(th){
-  const PV={x:W*0.5,y:H*0.10},Lp=H*0.42;
-  ctx.strokeStyle=INK;ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(PV.x-56,PV.y);ctx.lineTo(PV.x+56,PV.y);ctx.stroke();
-  ctx.strokeStyle='#bbb';ctx.lineWidth=1;for(let hx=PV.x-50;hx<PV.x+56;hx+=10){ctx.beginPath();ctx.moveTo(hx,PV.y);ctx.lineTo(hx-7,PV.y-7);ctx.stroke();}
-  ctx.strokeStyle='rgba(0,0,0,0.18)';ctx.setLineDash([4,5]);ctx.beginPath();ctx.moveTo(PV.x,PV.y);ctx.lineTo(PV.x,PV.y+Lp+26);ctx.stroke();ctx.setLineDash([]);
-  const B={x:PV.x+Lp*Math.sin(th),y:PV.y+Lp*Math.cos(th)};
-  ctx.strokeStyle=INK;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(PV.x,PV.y);ctx.lineTo(B.x,B.y);ctx.stroke();
-  arcA(PV,40,Math.PI/2,Math.PI/2-th,'θ');
-  ctx.fillStyle='#eef4fb';ctx.strokeStyle=BLUE;ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(B.x,B.y,12,0,7);ctx.fill();ctx.stroke();
-  return {C:B,ut:{x:Math.cos(th),y:Math.sin(th)},ur:{x:-Math.sin(th),y:Math.cos(th)},kF:H*0.012};
-}
-// --- 3D orbitable ---
-let az3=0.7,el3=0.5,tGlob=0;
-function pr3(x,y,z,cx,cy,sc){const ca=Math.cos(az3),sa=Math.sin(az3),ce=Math.cos(el3),se=Math.sin(el3);
-  const X=x*ca-y*sa,Y=x*sa+y*ca;return {x:cx+X*sc,y:cy-(Y*se+z*ce)*sc};}
-function arr3(o,tip,col,lab,w,cx,cy,sc){const A=pr3(o[0],o[1],o[2],cx,cy,sc),B=pr3(tip[0],tip[1],tip[2],cx,cy,sc);arrow(A.x,A.y,B.x-A.x,B.y-A.y,col,lab,w);}
-function comp2(O,kF,vx,vy,pp){
-  ctx.strokeStyle='#b9bdc4';ctx.setLineDash([3,3]);ctx.lineWidth=1.1;
-  ctx.beginPath();ctx.moveTo(O.x+vx*kF,O.y-vy*kF);ctx.lineTo(O.x+vx*kF,O.y);ctx.moveTo(O.x+vx*kF,O.y-vy*kF);ctx.lineTo(O.x,O.y-vy*kF);ctx.stroke();ctx.setLineDash([]);
-  arrow(O.x,O.y,vx*kF*pp,0,C_X,'',2.3);arrow(O.x,O.y,0,-vy*kF*pp,VIOLET,'',2.3);}
-function drawBlockRot(P,angle,lab){ctx.save();ctx.translate(P.x,P.y);ctx.rotate(angle);
-  ctx.fillStyle='#eef4fb';ctx.strokeStyle='#185fa5';ctx.lineWidth=2;ctx.beginPath();ctx.roundRect(-14,-28,28,28,5);ctx.fill();ctx.stroke();ctx.restore();
-  ctx.fillStyle='#185fa5';ctx.font='600 11px system-ui';ctx.textAlign='center';ctx.fillText(lab,P.x,P.y-13);}
-
-// ================= LES EXERCICES =================
 const EX=[
-{t:'Échauffement : force selon x',s:1,sl:null,
- st:'Une force <b style="color:#E24B4A">F̄ = 10 N</b> est dirigée selon +x. Donne <b style="color:#D85A30">Fₓ</b> et <b style="color:#7F77DD">F_y</b>.',
- draw:function(pp){const O={x:W*0.42,y:H*0.55},kF=Math.min(W,H)*0.026;axes2(O,kF);
-   arrow(O.x,O.y,10*kF,0,RED,'F̄',3.4);projAnim(O,kF,10,0,{x:1,y:0},{x:0,y:1},pp,'Fₓ','F_y');},
- sol:function(){return 'La force est déjà alignée sur x : <b style="color:'+C_X+'">Fₓ = +10 N</b> ; <b style="color:'+VIOLET+'">F_y = 0 N</b>. Pas de trigo nécessaire.';}},
-
-{t:'Le poids',s:1,sl:null,
- st:'Un objet de masse m = 2 kg subit son poids <b style="color:#378ADD">P̄ = m·g</b> (g ≈ 10 N/kg). Projette P̄ sur les axes x, y.',
- draw:function(pp){const O={x:W*0.42,y:H*0.36},kF=Math.min(W,H)*0.0165;axes2(O,kF);
-   arrow(O.x,O.y,0,20*kF,BLUE,'P̄ = mḡ',3.4);projAnim(O,kF,0,-20,{x:1,y:0},{x:0,y:1},pp,'Pₓ','P_y');},
- sol:function(){return 'Le poids est vertical, vers le bas : <b style="color:'+C_X+'">Pₓ = 0 N</b> ; <b style="color:'+VIOLET+'">P_y = −m·g = −20 N</b>. Le signe − dit « vers les y négatifs ».';}},
-
-{t:'Force inclinée (angle avec x)',s:2,sl:{lab:'θ',min:10,max:80,step:1,val:30,unit:'°'},
- st:'<b style="color:#E24B4A">F = 10 N</b> fait un angle θ avec l\'axe x. Exprime <b style="color:#D85A30">Fₓ</b> et <b style="color:#7F77DD">F_y</b> avec cosθ et sinθ.',
- draw:function(pp){const th=this.sl.val*D2R,O={x:W*0.40,y:H*0.62},kF=Math.min(W,H)*0.026;axes2(O,kF);
-   arcA(O,34,0,-th,'θ');const v={x:10*Math.cos(th),y:10*Math.sin(th)};
-   arrow(O.x,O.y,v.x*kF,-v.y*kF,RED,'F̄',3.4);projAnim(O,kF,v.x,v.y,{x:1,y:0},{x:0,y:1},pp,'Fₓ','F_y');},
- sol:function(){const th=this.sl.val*D2R;return '<b>Côté adjacent à θ → cos ; côté opposé → sin.</b> <b style="color:'+C_X+'">Fₓ = F·cosθ = '+f1(10*Math.cos(th))+' N</b> ; <b style="color:'+VIOLET+'">F_y = F·sinθ = '+f1(10*Math.sin(th))+' N</b>.';}},
-
-{t:'PIÈGE : angle avec la verticale',s:2,sl:{lab:'α',min:5,max:80,step:1,val:25,unit:'°'},
- st:'<b style="color:#E24B4A">F = 10 N</b> fait un angle α avec l\'axe <b>y</b> (la verticale). Attention : cos et sin s\'échangent !',
- draw:function(pp){const al=this.sl.val*D2R,O={x:W*0.40,y:H*0.62},kF=Math.min(W,H)*0.026;axes2(O,kF);
-   arcA(O,40,-Math.PI/2,-Math.PI/2+al,'α');const v={x:10*Math.sin(al),y:10*Math.cos(al)};
-   arrow(O.x,O.y,v.x*kF,-v.y*kF,RED,'F̄',3.4);projAnim(O,kF,v.x,v.y,{x:1,y:0},{x:0,y:1},pp,'Fₓ','F_y');},
- sol:function(){const al=this.sl.val*D2R;return 'L\'angle est mesuré depuis <b>y</b> : le côté adjacent est sur y ! <b style="color:'+C_X+'">Fₓ = F·<u>sin</u>α = '+f1(10*Math.sin(al))+' N</b> ; <b style="color:'+VIOLET+'">F_y = F·<u>cos</u>α = '+f1(10*Math.cos(al))+' N</b>. Toujours regarder <b>de quel axe part l\'angle</b>.';}},
-
-{t:'Signes : 2ᵉ quadrant',s:2,sl:{lab:'θ',min:95,max:175,step:1,val:135,unit:'°'},
- st:'<b style="color:#E24B4A">F = 10 N</b>, θ &gt; 90° (mesuré depuis +x). Quels <b>signes</b> pour Fₓ et F_y ?',
- draw:function(pp){const th=this.sl.val*D2R,O={x:W*0.46,y:H*0.60},kF=Math.min(W,H)*0.024;axes2(O,kF);
-   arcA(O,30,0,-th,'θ');const v={x:10*Math.cos(th),y:10*Math.sin(th)};
-   arrow(O.x,O.y,v.x*kF,-v.y*kF,RED,'F̄',3.4);projAnim(O,kF,v.x,v.y,{x:1,y:0},{x:0,y:1},pp,'Fₓ','F_y');},
- sol:function(){const th=this.sl.val*D2R;return 'Les formules ne changent pas, le cos s\'en charge : <b style="color:'+C_X+'">Fₓ = F·cosθ = '+f1(10*Math.cos(th))+' N &lt; 0</b> (vers −x) ; <b style="color:'+VIOLET+'">F_y = F·sinθ = '+f1(10*Math.sin(th))+' N &gt; 0</b>.';}},
-
-{t:'Signes : sous l\'horizontale',s:2,sl:{lab:'θ',min:-80,max:-5,step:1,val:-35,unit:'°'},
- st:'<b style="color:#E24B4A">F = 10 N</b> pointe <b>sous</b> l\'horizontale (θ &lt; 0), comme une corde qui tire vers le bas.',
- draw:function(pp){const th=this.sl.val*D2R,O={x:W*0.38,y:H*0.42},kF=Math.min(W,H)*0.024;axes2(O,kF);
-   arcA(O,34,0,-th,'θ');const v={x:10*Math.cos(th),y:10*Math.sin(th)};
-   arrow(O.x,O.y,v.x*kF,-v.y*kF,RED,'F̄',3.4);projAnim(O,kF,v.x,v.y,{x:1,y:0},{x:0,y:1},pp,'Fₓ','F_y');},
- sol:function(){const th=this.sl.val*D2R;return '<b style="color:'+C_X+'">Fₓ = F·cosθ = '+f1(10*Math.cos(th))+' N &gt; 0</b> ; <b style="color:'+VIOLET+'">F_y = F·sinθ = '+f1(10*Math.sin(th))+' N &lt; 0</b> : la composante verticale tire vers le bas. Un angle négatif donne un sinus négatif — les signes sortent tout seuls.';}},
-
-{t:'Plan incliné — axes liés à la pente',s:3,sl:{lab:'θ',min:10,max:50,step:1,val:30,unit:'°'},
- st:'LE classique : projette le poids <b style="color:#378ADD">P̄ = 20 N</b> sur les axes <b>liés à la pente</b> (x le long de la pente vers le haut, y ⟂ à la pente).',
- draw:function(pp){const th=this.sl.val*D2R,sc=incline(th);
-   axesU(sc.C,sc.kF,sc.u,sc.n,'x','y',H*0.19);
-   arrow(sc.C.x,sc.C.y,0,20*sc.kF,BLUE,'P̄',3.4);
-   arcA(sc.C,30,Math.PI/2,Math.PI/2-th,'θ',BLUE);
-   projAnim(sc.C,sc.kF,0,-20,sc.u,sc.n,pp,'Pₓ','P_y');},
- sol:function(){const th=this.sl.val*D2R;return 'L\'angle entre P̄ et l\'axe −y vaut θ (angles à côtés perpendiculaires). <b style="color:'+C_X+'">Pₓ = −P·sinθ = '+f1(-20*Math.sin(th))+' N</b> (tire vers le bas de la pente) ; <b style="color:'+VIOLET+'">P_y = −P·cosθ = '+f1(-20*Math.cos(th))+' N</b> (plaque contre la pente).';}},
-
-{t:'Plan incliné — axes horizontal/vertical',s:3,sl:{lab:'θ',min:10,max:50,step:1,val:30,unit:'°'},
- st:'Même pente, mais axes <b>horizontal/vertical</b>. Projette maintenant la <b style="color:#7F77DD">normale N̄</b> (de norme P·cosθ = 20·cosθ).',
- draw:function(pp){const th=this.sl.val*D2R,sc=incline(th);
-   axesU(sc.C,sc.kF,{x:1,y:0},{x:0,y:1},'x','y',H*0.19);
-   const Nm=20*Math.cos(th),v={x:Nm*sc.n.x,y:Nm*sc.n.y};
-   arrow(sc.C.x,sc.C.y,v.x*sc.kF,-v.y*sc.kF,VIOLET,'N̄',3.4);
-   projAnim(sc.C,sc.kF,v.x,v.y,{x:1,y:0},{x:0,y:1},pp,'Nₓ','N_y');},
- sol:function(){const th=this.sl.val*D2R,Nm=20*Math.cos(th);return 'N̄ fait l\'angle θ avec la verticale : <b style="color:'+C_X+'">Nₓ = −N·sinθ = −20·cosθ·sinθ = '+f1(-Nm*Math.sin(th))+' N</b> ; <b style="color:'+VIOLET+'">N_y = +N·cosθ = 20·cos²θ = '+f1(Nm*Math.cos(th))+' N</b>. Des produits cosθ·sinθ, du cos²θ… ça marche, mais c\'est <b>lourd</b> → voir exercice suivant.';}},
-
-{t:'Comparer les deux choix d\'axes',s:3,sl:{lab:'θ',min:10,max:50,step:1,val:30,unit:'°'},axesBtn:true,
- st:'Projette le poids <b style="color:#378ADD">P̄ = 20 N</b> avec les <b>deux</b> choix d\'axes (bouton « Changer d\'axes »). Aucun n\'est faux — lequel est malin, et pourquoi ?',
- draw:function(pp){const th=this.sl.val*D2R,sc=incline(th);
-   const u1=axesChoice===0?sc.u:{x:1,y:0},u2=axesChoice===0?sc.n:{x:0,y:1};
-   axesU(sc.C,sc.kF,u1,u2,axesChoice===0?'x (pente)':'x',axesChoice===0?'y (⟂)':'y',H*0.19);
-   ctx.fillStyle='#0F6E56';ctx.font='600 12px system-ui';ctx.textAlign='left';
-   ctx.fillText(axesChoice===0?'axes liés à la pente':'axes horizontal / vertical',14,20);
-   arrow(sc.C.x,sc.C.y,0,20*sc.kF,BLUE,'P̄',3.4);
-   projAnim(sc.C,sc.kF,0,-20,u1,u2,pp,'Pₓ','P_y');},
- sol:function(){const th=this.sl.val*D2R;return 'Axes pente : <b style="color:'+C_X+'">Pₓ=−P·sinθ='+f1(-20*Math.sin(th))+'</b>, <b style="color:'+VIOLET+'">P_y=−P·cosθ='+f1(-20*Math.cos(th))+'</b>. Axes horizontaux : Pₓ=0, P_y=−20. Le poids est plus simple dans le 2ᵉ… mais le mouvement (et N̄, f̄) est <b>le long de la pente</b> : avec les axes de pente, ΣF_y=0 et tout le mouvement vit sur un seul axe. <b>On choisit les axes selon le mouvement.</b>';}},
-
-{t:'Traction inclinée sur la pente',s:4,sl:{lab:'α',min:0,max:45,step:1,val:20,unit:'°'},
- st:'Pente fixe θ = 30°. Une corde tire le bloc avec <b style="color:#1D9E75">F = 12 N</b> à un angle α <b>au-dessus de la surface de la pente</b>. Projette F̄ sur les axes de la pente.',
- draw:function(pp){const th=30*D2R,al=this.sl.val*D2R,sc=incline(th);
-   axesU(sc.C,sc.kF,sc.u,sc.n,'x','y',H*0.19);
-   const dirF={x:Math.cos(th+al),y:Math.sin(th+al)},v={x:12*dirF.x,y:12*dirF.y};
-   arrow(sc.C.x,sc.C.y,v.x*sc.kF,-v.y*sc.kF,GREEN,'F̄',3.4);
-   arcA(sc.C,44,-th,-th-al,'α',GREEN);
-   projAnim(sc.C,sc.kF,v.x,v.y,sc.u,sc.n,pp,'Fₓ','F_y');},
- sol:function(){const al=this.sl.val*D2R;return 'Dans le repère de la pente, F̄ fait simplement l\'angle α avec l\'axe x : <b style="color:'+C_X+'">Fₓ = F·cosα = '+f1(12*Math.cos(al))+' N</b> (monte le bloc) ; <b style="color:'+VIOLET+'">F_y = F·sinα = '+f1(12*Math.sin(al))+' N</b> (soulage la pente → N̄ diminue !). L\'angle θ n\'apparaît pas : il est déjà « absorbé » par le choix des axes.';}},
-
-{t:'Pendule — axes tangent / fil',s:4,sl:{lab:'θ',min:10,max:70,step:1,val:35,unit:'°'},
- st:'Le fil d\'un pendule fait un angle θ avec la verticale. Projette le poids <b style="color:#378ADD">P̄ = 20 N</b> sur l\'axe <b>x tangent</b> à la trajectoire et l\'axe <b>y le long du fil</b> (vers le pivot).',
- draw:function(pp){const th=this.sl.val*D2R,sc=pendule(th);
-   axesU(sc.C,sc.kF,sc.ut,sc.ur,'x (tangent)','y (fil)',H*0.15);
-   arrow(sc.C.x,sc.C.y,0,20*sc.kF,BLUE,'P̄',3.4);
-   projAnim(sc.C,sc.kF,0,-20,sc.ut,sc.ur,pp,'Pₓ','P_y');},
- sol:function(){const th=this.sl.val*D2R;return 'Même géométrie que le plan incliné ! <b style="color:'+C_X+'">Pₓ = −P·sinθ = '+f1(-20*Math.sin(th))+' N</b> : c\'est la <b>force de rappel</b> qui ramène le pendule. <b style="color:'+VIOLET+'">P_y = −P·cosθ = '+f1(-20*Math.cos(th))+' N</b> : compensée (en partie) par la tension T̄.';}},
-
-{t:'SYNTHÈSE : bilan complet sur la pente',s:5,sl:{lab:'θ',min:15,max:40,step:1,val:30,unit:'°'},
- st:'Bloc sur pente d\'angle θ : poids <b style="color:#378ADD">P̄=20 N</b>, normale <b style="color:#7F77DD">N̄</b>, traction <b style="color:#1D9E75">F̄=8 N</b> et frottement <b style="color:#BA7517">f̄=3 N</b>, tous deux vers le haut de la pente. Projette tout sur les axes de la pente et calcule <b>ΣFₓ</b> et <b>ΣF_y</b>.',
- draw:function(pp){const th=this.sl.val*D2R,sc=incline(th);
-   axesU(sc.C,sc.kF,sc.u,sc.n,'x','y',H*0.17);
-   const Nm=20*Math.cos(th);
-   arrow(sc.C.x,sc.C.y,0,20*sc.kF,BLUE,'P̄',3.2);
-   arrow(sc.C.x,sc.C.y,sc.n.x*Nm*sc.kF,-sc.n.y*Nm*sc.kF,VIOLET,'N̄',3);
-   arrow(sc.C.x,sc.C.y,sc.u.x*8*sc.kF,-sc.u.y*8*sc.kF,GREEN,'F̄',3);
-   arrow(sc.C.x+sc.n.x*8,sc.C.y-sc.n.y*8,sc.u.x*3*sc.kF,-sc.u.y*3*sc.kF,ORANGE,'f̄',2.6);
-   projAnim(sc.C,sc.kF,0,-20,sc.u,sc.n,pp,'Pₓ','P_y');},
- sol:function(){const th=this.sl.val*D2R,Ps=20*Math.sin(th),Pc=20*Math.cos(th);
-   return 'Seul P̄ doit être projeté (N̄, F̄, f̄ sont déjà sur les axes !) : Pₓ=−'+f1(Ps)+' N, P_y=−'+f1(Pc)+' N.<br><b style="color:'+C_X+'">ΣFₓ = F + f − P·sinθ = 8 + 3 − '+f1(Ps)+' = '+f1(8+3-Ps)+' N</b> → '+((8+3-Ps)>0?'le bloc accélère vers le <b>haut</b> de la pente':'le bloc accélère vers le <b>bas</b> de la pente (la traction ne suffit pas)')+'.<br><b style="color:'+VIOLET+'">ΣF_y = N − P·cosθ = 0 ⇒ N = '+f1(Pc)+' N</b> (pas de mouvement ⟂ à la pente).';}},
-
-{t:'Pendule conique en 3D',s:5,d3:true,sl:{lab:'θ',min:20,max:60,step:1,val:40,unit:'°'},
- st:'Système en <b>mouvement circulaire dans l\'espace</b> (pendule conique) : la masse (m=1 kg) décrit un cercle horizontal. Projette la tension <b style="color:#E24B4A">T̄</b> sur la <b style="color:#7F77DD">verticale</b> et l\'<b style="color:#D85A30">horizontale</b>. 🖱 tourne la vue en 3D.',
- draw:function(pp){const th=this.sl.val*D2R,m=1,gg=10,L=1.4,kw=0.085;
-   const cx=W*0.5,cy=H*0.40,sc=Math.min(W,H)*0.16,S=(x,y,z)=>pr3(x,y,z,cx,cy,sc);
-   const om=Math.sqrt(gg/(L*Math.cos(th))),phi=tGlob*0.018*om;
-   const r=L*Math.sin(th),zb=-L*Math.cos(th),bob=[r*Math.cos(phi),r*Math.sin(phi),zb];
-   const zg=-L*1.05,N=1.4;ctx.strokeStyle='#edeff2';ctx.lineWidth=1;
-   for(let i=-3;i<=3;i++){const t=i/3*N;let a=S(t,-N,zg),b=S(t,N,zg);ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
-     let c=S(-N,t,zg),d=S(N,t,zg);ctx.beginPath();ctx.moveTo(c.x,c.y);ctx.lineTo(d.x,d.y);ctx.stroke();}
-   [['x',[N,0,0]],['y',[0,N,0]],['z',[0,0,-L*1.25]]].forEach(A=>{const o=S(0,0,0),e=S(A[1][0],A[1][1],A[1][2]);
-     ctx.strokeStyle='#c8ccd0';ctx.lineWidth=1.3;ctx.beginPath();ctx.moveTo(o.x,o.y);ctx.lineTo(e.x,e.y);ctx.stroke();
-     ctx.fillStyle=GREY;ctx.font='600 12px system-ui';ctx.textAlign='center';ctx.fillText(A[0],e.x,e.y-4);});
-   const p0=S(0,0,0),pdw=S(0,0,zb);ctx.strokeStyle='rgba(0,0,0,0.18)';ctx.setLineDash([4,5]);ctx.beginPath();ctx.moveTo(p0.x,p0.y);ctx.lineTo(pdw.x,pdw.y);ctx.stroke();ctx.setLineDash([]);
-   ctx.strokeStyle='rgba(127,119,221,0.4)';ctx.lineWidth=1.3;ctx.beginPath();
-   for(let k=0;k<=48;k++){const aa=k/48*2*Math.PI;const q=S(r*Math.cos(aa),r*Math.sin(aa),zb);k===0?ctx.moveTo(q.x,q.y):ctx.lineTo(q.x,q.y);}ctx.stroke();
-   const piv=S(0,0,0),pb=S(bob[0],bob[1],bob[2]);ctx.strokeStyle=INK;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(piv.x,piv.y);ctx.lineTo(pb.x,pb.y);ctx.stroke();
-   const T=m*gg/Math.cos(th),tdir=[-bob[0]/L,-bob[1]/L,-bob[2]/L];
-   arr3(bob,[bob[0],bob[1],bob[2]-m*gg*kw],BLUE,'P̄',3,cx,cy,sc);
-   arr3(bob,[bob[0]+tdir[0]*T*kw,bob[1]+tdir[1]*T*kw,bob[2]+tdir[2]*T*kw],RED,'T̄',3,cx,cy,sc);
-   ctx.fillStyle='#eef4fb';ctx.strokeStyle=BLUE;ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(pb.x,pb.y,11,0,7);ctx.fill();ctx.stroke();
-   if(pp>0){const Tv=T*Math.cos(th),Tn=T*Math.sin(th),nH=[-Math.cos(phi),-Math.sin(phi),0];
-     arr3(bob,[bob[0],bob[1],bob[2]+Tv*kw*pp],VIOLET,pp>0.7?'T·cosθ':'',3,cx,cy,sc);
-     arr3(bob,[bob[0]+nH[0]*Tn*kw*pp,bob[1]+nH[1]*Tn*kw*pp,bob[2]],C_X,pp>0.7?'T·sinθ':'',3,cx,cy,sc);}},
- sol:function(){const th=this.sl.val*D2R,m=1,gg=10;const T=m*gg/Math.cos(th),Tn=T*Math.sin(th);
-   return 'Repère cylindrique (vertical + radial). <b style="color:'+VIOLET+'">Vertical : T·cosθ = m·g</b> ⇒ T = mg/cosθ = '+f1(T)+' N. <b style="color:'+C_X+'">Horizontal : T·sinθ = m·aₙ</b> (force centripète vers l\'axe) = '+f1(Tn)+' N ⇒ aₙ = v²/r = '+f1(Tn/m)+' m/s². Si le mouvement s\'accélère (MCUA), une force tangentielle F_t = m·aₜ = m·R·α s\'ajoute le long du cercle.';}},
-
-{t:'Double plan incliné avec poulie',s:5,sl:{lab:'α (gauche)',min:15,max:55,step:1,val:35,unit:'°'},
- st:'Deux blocs reliés par un fil sur une poulie au sommet. Gauche <b>m₁=2 kg</b> sur pente α, droite <b>m₂=3 kg</b> sur pente <b>β=35°</b>. Projette chaque poids sur SON axe de pente, puis écris les équations.',
- draw:function(pp){const al=this.sl.val*D2R,be=35*D2R,m1=2,m2=3,gg=10;
-   const apex={x:W*0.5,y:H*0.14},baseY=H*0.82;
-   const Ll=Math.min((baseY-apex.y)/Math.sin(al),W*0.40/Math.cos(al));
-   const Lr=Math.min((baseY-apex.y)/Math.sin(be),W*0.40/Math.cos(be));
-   const BL={x:apex.x-Ll*Math.cos(al),y:apex.y+Ll*Math.sin(al)},BR={x:apex.x+Lr*Math.cos(be),y:apex.y+Lr*Math.sin(be)};
-   ctx.strokeStyle=AX;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(BL.x-20,BL.y);ctx.lineTo(BR.x+20,BR.y);ctx.stroke();
-   ctx.fillStyle='rgba(120,130,140,0.08)';ctx.strokeStyle=INK;ctx.lineWidth=2.5;ctx.beginPath();ctx.moveTo(BL.x,BL.y);ctx.lineTo(apex.x,apex.y);ctx.lineTo(BR.x,BR.y);ctx.closePath();ctx.fill();ctx.stroke();
-   ctx.fillStyle=GREY;ctx.font='600 12px system-ui';ctx.textAlign='center';ctx.fillText('α',BL.x+26,BL.y-6);ctx.fillText('β',BR.x-26,BR.y-6);
-   ctx.fillStyle='#fff';ctx.strokeStyle=INK;ctx.lineWidth=2;ctx.beginPath();ctx.arc(apex.x,apex.y,7,0,7);ctx.fill();ctx.stroke();
-   const PL={x:BL.x+(apex.x-BL.x)*0.5,y:BL.y+(apex.y-BL.y)*0.5},PR={x:BR.x+(apex.x-BR.x)*0.5,y:BR.y+(apex.y-BR.y)*0.5};
-   ctx.strokeStyle=GREEN;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(PL.x,PL.y);ctx.lineTo(apex.x,apex.y);ctx.lineTo(PR.x,PR.y);ctx.stroke();
-   drawBlockRot(PL,-al,'m₁');drawBlockRot(PR,be,'m₂');
-   const kf=H*0.011;
-   arrow(PL.x,PL.y,0,m1*gg*kf,BLUE,'P̄₁',2.8);arrow(PR.x,PR.y,0,m2*gg*kf,BLUE,'P̄₂',2.8);
-   const uL={x:Math.cos(al),y:Math.sin(al)},nL={x:-Math.sin(al),y:Math.cos(al)};
-   const uR={x:-Math.cos(be),y:Math.sin(be)},nR={x:Math.sin(be),y:Math.cos(be)};
-   if(pp>0){projAnim(PL,kf,0,-m1*gg,uL,nL,pp,'P₁∥','P₁⟂');projAnim(PR,kf,0,-m2*gg,uR,nR,pp,'P₂∥','P₂⟂');}},
- sol:function(){const al=this.sl.val*D2R,be=35*D2R,m1=2,m2=3,gg=10;
-   const a=gg*(m2*Math.sin(be)-m1*Math.sin(al))/(m1+m2),Tn=m1*(gg*Math.sin(al)+a);
-   return 'Chaque poids se projette sur son axe de pente : composante motrice <b>m·g·sinθ</b> (le long de la pente), composante ⟂ équilibrée par N̄. Le long du fil : <b style="color:'+C_X+'">T − m₁g·sinα = m₁a</b> et <b style="color:'+C_X+'">m₂g·sinβ − T = m₂a</b>. En sommant : <b>a = g(m₂sinβ − m₁sinα)/(m₁+m₂) = '+f1(a)+' m/s²</b> ('+(a>0?'part vers la droite (m₂ descend)':'part vers la gauche (m₁ descend)')+'), T = '+f1(Tn)+' N.';}},
-
-{t:'Charge suspendue par deux câbles',s:5,sl:{lab:'α (gauche)',min:20,max:75,step:1,val:35,unit:'°'},
- st:'Charge <b>W = 20 N</b> tenue par deux câbles faisant les angles α (gauche) et <b>β=50°</b> (droite) avec l\'horizontale. Équilibre statique : projette <b style="color:#E24B4A">T̄₁</b> et <b style="color:#1D9E75">T̄₂</b> sur x, y et résous le système.',
- draw:function(pp){const al=this.sl.val*D2R,be=50*D2R,Wt=20;
-   const knot={x:W*0.5,y:H*0.58},ceilY=H*0.12;
-   const A1={x:knot.x-(knot.y-ceilY)/Math.tan(al),y:ceilY},A2={x:knot.x+(knot.y-ceilY)/Math.tan(be),y:ceilY};
-   const cxa=Math.min(A1.x,A2.x)-30,cxb=Math.max(A1.x,A2.x)+30;
-   ctx.strokeStyle=INK;ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(cxa,ceilY);ctx.lineTo(cxb,ceilY);ctx.stroke();
-   ctx.strokeStyle='#bbb';ctx.lineWidth=1;for(let hx=cxa;hx<cxb;hx+=12){ctx.beginPath();ctx.moveTo(hx,ceilY);ctx.lineTo(hx-7,ceilY-7);ctx.stroke();}
-   ctx.strokeStyle=INK;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(A1.x,A1.y);ctx.lineTo(knot.x,knot.y);ctx.moveTo(A2.x,A2.y);ctx.lineTo(knot.x,knot.y);ctx.stroke();
-   ctx.fillStyle='#eef4fb';ctx.strokeStyle=BLUE;ctx.lineWidth=2;ctx.beginPath();ctx.roundRect(knot.x-16,knot.y+20,32,26,5);ctx.fill();ctx.stroke();
-   ctx.strokeStyle=INK;ctx.beginPath();ctx.moveTo(knot.x,knot.y);ctx.lineTo(knot.x,knot.y+20);ctx.stroke();
-   const T1=Wt/(Math.sin(al)+Math.cos(al)*Math.tan(be)),T2=T1*Math.cos(al)/Math.cos(be),kf=H*0.010;
-   const u1={x:-Math.cos(al),y:Math.sin(al)},u2={x:Math.cos(be),y:Math.sin(be)};
-   arrow(knot.x,knot.y,u1.x*T1*kf,-u1.y*T1*kf,RED,'T̄₁',3);
-   arrow(knot.x,knot.y,u2.x*T2*kf,-u2.y*T2*kf,GREEN,'T̄₂',3);
-   arrow(knot.x,knot.y,0,Wt*kf,BLUE,'W̄',3);
-   ctx.fillStyle=INK;ctx.beginPath();ctx.arc(knot.x,knot.y,3.5,0,7);ctx.fill();
-   ctx.fillStyle=GREY;ctx.font='600 12px system-ui';ctx.textAlign='center';ctx.fillText('α',knot.x-32,knot.y-6);ctx.fillText('β',knot.x+32,knot.y-6);
-   if(pp>0){comp2(knot,kf,u1.x*T1,u1.y*T1,pp);comp2(knot,kf,u2.x*T2,u2.y*T2,pp);}},
- sol:function(){const al=this.sl.val*D2R,be=50*D2R,Wt=20;const T1=Wt/(Math.sin(al)+Math.cos(al)*Math.tan(be)),T2=T1*Math.cos(al)/Math.cos(be);
-   return 'Deux inconnues → deux projections.<br><b style="color:'+C_X+'">ΣFₓ = 0 : T₂·cosβ − T₁·cosα = 0</b><br><b style="color:'+VIOLET+'">ΣF_y = 0 : T₁·sinα + T₂·sinβ − W = 0</b><br>Résolution : <b>T₁ = '+f1(T1)+' N</b>, <b>T₂ = '+f1(T2)+' N</b>. Les composantes horizontales (orange) se compensent, les verticales (violet) portent le poids.';}}
+{t:'Clé perpendiculaire',s:1,st:'Une force <b style="color:#E24B4A">F = 10 N</b> est appliquée <b>perpendiculairement</b> à une clé, à d = 0,20 m de l\'axe. Calcule le moment.',
+ draw:function(pp){cle(90,pp>0);},sol:function(){return 'θ = 90° ⇒ sinθ = 1 : le bras de levier = toute la longueur. <b style="color:'+ORANGE+'">M = F·d = 10 × 0,20 = 2,0 N·m</b> — le cas le plus efficace.';}},
+{t:'Clé tirée de travers',s:2,st:'Même clé (d = 0,20 m), même force (10 N), mais tirée à <b>θ = 30°</b> par rapport au bras. Moment ?',
+ draw:function(pp){cle(30,pp>0);},sol:function(){return '<b style="color:'+ORANGE+'">M = F·d·sinθ = 10 × 0,20 × sin30° = 1,0 N·m</b>. Deux fois moins : tirer de travers gaspille une partie de la force.';}},
+{t:'Force alignée',s:1,st:'Pourquoi une force dirigée exactement <b>le long du bras</b> (θ = 0°) ne fait-elle jamais tourner ?',
+ draw:function(pp){cle(0,pp>0);},sol:function(){return 'Car <b>sin0° = 0 ⇒ M = 0</b>. La ligne d\'action passe par l\'axe : le bras de levier d = r·sin0° = 0. Aucune tendance à la rotation.';}},
+{t:'Balançoire',s:2,st:'Un enfant de poids <b>300 N</b> est à 1,5 m de l\'axe. À quelle distance placer un adulte de <b>600 N</b> pour équilibrer ?',
+ draw:function(pp){const O={x:W*0.5,y:H*0.52},k=W*0.11;
+   ctx.save();ctx.translate(O.x,O.y);ctx.rotate(pp>0?0:0.10);
+   ctx.strokeStyle=INK;ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(-2.2*k,0);ctx.lineTo(2.2*k,0);ctx.stroke();
+   function kid(x,ww,col,lab){ctx.fillStyle=col+'22';ctx.strokeStyle=col;ctx.lineWidth=2;const s=14+ww*0.03;ctx.beginPath();ctx.roundRect(x-s/2,-s-2,s,s,4);ctx.fill();ctx.stroke();
+     arrow(x,-2,0,ww*0.06,col,'',2.4);ctx.fillStyle=col;ctx.font='600 11px ui-monospace';ctx.textAlign='center';ctx.fillText(lab,x,-s-8);}
+   kid(-1.5*k,300,DRED,'300 N');kid((pp>0?0.75:1.5)*k,600,BLUE_D,'600 N');ctx.restore();
+   ctx.fillStyle=INK;ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(O.x-14,O.y+24);ctx.lineTo(O.x,O.y);ctx.lineTo(O.x+14,O.y+24);ctx.stroke();pivot(O.x,O.y);
+   ctx.fillStyle=GREY;ctx.font='11px ui-monospace';ctx.textAlign='center';ctx.fillText('1,5 m',O.x-1.5*k/2,O.y+22);if(pp>0)ctx.fillText('0,75 m',O.x+0.75*k/2,O.y+22);},
+ sol:function(){return 'ΣM = 0 : 300 × 1,5 = 600 × d ⇒ <b style="color:'+ORANGE+'">d = 450 / 600 = 0,75 m</b>. Le plus lourd se place plus près de l\'axe (bras plus court).';}},
+{t:'Deux forces, sens opposés',s:3,st:'Sur une barre : <b style="color:#1D9E75">8 N à 0,5 m</b> (antihoraire) et <b style="color:#E24B4A">5 N à 0,9 m</b> (horaire). Moment résultant et sens ?',
+ draw:function(pp){const O={x:W*0.22,y:H*0.55},k=W*0.55;
+   ctx.strokeStyle=INK;ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(O.x,O.y);ctx.lineTo(O.x+k,O.y);ctx.stroke();pivot(O.x,O.y);
+   arrow(O.x+0.45*k,O.y,0,-46,GREEN,'8 N',2.8);ctx.fillStyle=GREY;ctx.font='10px ui-monospace';ctx.textAlign='center';ctx.fillText('0,5 m',O.x+0.45*k,O.y+16);
+   arrow(O.x+0.81*k,O.y,0,46,RED,'5 N',2.8);ctx.fillText('0,9 m',O.x+0.81*k,O.y-10);
+   if(pp>0){ctx.fillStyle=DRED;ctx.font='600 13px system-ui';ctx.fillText('M = +8·0,5 − 5·0,9 = −0,5 N·m (horaire)',W*0.5,H*0.86);}},
+ sol:function(){return 'On additionne avec les signes : M = <b style="color:'+GREEN+'">+8×0,5</b> − <b style="color:'+RED+'">5×0,9</b> = 4,0 − 4,5 = <b style="color:'+ORANGE+'">−0,5 N·m</b>. Le signe − ⇒ résultante <b>horaire</b> : la 2ᵉ force l\'emporte.';}},
+{t:'Barre inclinée (le plus simple possible)',s:3,st:'Force <b style="color:#E24B4A">F̄ = 2 N</b> au bout d\'une barre de 4 cm inclinée à 30°, la force faisant 15° avec la verticale. Moment par rapport à O ?',
+ draw:function(pp){const O={x:W*0.60,y:H*0.66},L=W*0.24;
+   const rU={x:-Math.cos(30*D2R),y:-Math.sin(30*D2R)},A={x:O.x+rU.x*L,y:O.y+rU.y*L};
+   ctx.strokeStyle=AX;ctx.setLineDash([5,5]);ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(O.x-L*1.1,O.y);ctx.lineTo(O.x+30,O.y);ctx.stroke();ctx.setLineDash([]);
+   ctx.strokeStyle=GREY;ctx.lineWidth=1.3;ctx.beginPath();ctx.arc(O.x,O.y,30,Math.PI,Math.PI+30*D2R,true);ctx.stroke();ctx.fillStyle=GREY;ctx.font='11px system-ui';ctx.textAlign='center';ctx.fillText('30°',O.x-42,O.y-8);
+   ctx.strokeStyle=INK;ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(O.x,O.y);ctx.lineTo(A.x,A.y);ctx.stroke();
+   ctx.fillStyle=BLUE_D;ctx.font='600 12px system-ui';ctx.fillText('4 cm',(O.x+A.x)/2+6,(O.y+A.y)/2-8);
+   const fdir=rot(rU,-135*D2R);arrow(A.x,A.y,fdir.x*70,fdir.y*70,RED,'F̄',3.2);
+   ctx.fillStyle=INK;ctx.font='11px system-ui';ctx.fillText('15° / verticale',A.x-4,A.y-14);pivot(O.x,O.y);
+   if(pp>0){const H0=foot(O,A,fdir);ctx.strokeStyle='#d8b0b0';ctx.setLineDash([5,5]);ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(A.x-fdir.x*40,A.y-fdir.y*40);ctx.lineTo(H0.x+fdir.x*30,H0.y+fdir.y*30);ctx.stroke();ctx.setLineDash([]);
+     ctx.strokeStyle=GREEN;ctx.lineWidth=2.4;ctx.beginPath();ctx.moveTo(O.x,O.y);ctx.lineTo(H0.x,H0.y);ctx.stroke();ctx.fillStyle=GREEN;ctx.font='600 11px ui-monospace';ctx.fillText('d = r·sin45°',(O.x+H0.x)/2-4,(O.y+H0.y)/2-6);
+     ctx.fillStyle=INK;ctx.font='600 12px system-ui';ctx.textAlign='center';ctx.fillText('45° = 30°+15°',A.x+fdir.x*40+20,A.y+fdir.y*40);}},
+ sol:function(){const M=2*0.04*Math.sqrt(2)/2;return 'Astuce : l\'angle entre la barre et la force vaut <b>30° + 15° = 45°</b>. Donc <b style="color:'+ORANGE+'">M = F·r·sin45° = 2 × 0,04 × (√2/2) = 0,04·√2 ≈ '+M.toFixed(3)+' N·m</b>.';}},
+{t:'Deux tiges soudées',s:5,st:'Deux tiges AB et BC (‖AB‖=‖BC‖=2a), soudées en B (135°), soumises en C à <b style="color:#E24B4A">F̄</b>. Quelle <b style="color:#7F77DD">F̄\'</b> ∥ BC, appliquée au milieu M de AB, a le même moment par rapport à A ?',
+ draw:function(pp){const A={x:W*0.22,y:H*0.82},a=W*0.11;
+   const uAB=rot({x:1,y:0},-35*D2R),B={x:A.x+uAB.x*2*a,y:A.y+uAB.y*2*a};
+   const uBC=rot(uAB,-135*D2R),C={x:B.x+uBC.x*2*a,y:B.y+uBC.y*2*a},M={x:(A.x+B.x)/2,y:(A.y+B.y)/2};
+   ctx.strokeStyle=INK;ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(A.x,A.y);ctx.lineTo(B.x,B.y);ctx.lineTo(C.x,C.y);ctx.stroke();
+   ctx.fillStyle=INK;ctx.font='600 13px system-ui';ctx.textAlign='center';ctx.fillText('A',A.x-12,A.y+4);ctx.fillText('B',B.x-2,B.y-10);ctx.fillText('C',C.x+12,C.y+4);pivot(A.x,A.y,'A');
+   const fF=rot(uBC,-30*D2R);arrow(C.x,C.y,fF.x*60,fF.y*60,RED,'F̄',3);
+   ctx.fillStyle='#fff';ctx.strokeStyle=VIOLET;ctx.lineWidth=2;ctx.beginPath();ctx.arc(M.x,M.y,5,0,7);ctx.fill();ctx.stroke();ctx.fillStyle=VIOLET;ctx.font='600 12px system-ui';ctx.fillText('M',M.x-12,M.y-8);
+   if(pp>0){arrow(M.x,M.y,uBC.x*54,uBC.y*54,VIOLET,"F̄'",3);
+     const H0=foot(A,C,fF);ctx.strokeStyle=GREEN;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(A.x,A.y);ctx.lineTo(H0.x,H0.y);ctx.stroke();
+     const H1=foot(A,M,uBC);ctx.strokeStyle='#0F6E56';ctx.setLineDash([4,3]);ctx.beginPath();ctx.moveTo(A.x,A.y);ctx.lineTo(H1.x,H1.y);ctx.stroke();ctx.setLineDash([]);}},
+ sol:function(){return 'On égale les moments par rapport à A. <b style="color:'+GREEN+'">M_A(F̄) = F·d_F</b> (d_F = distance ⊥ de A à la ligne de F̄) et <b style="color:'+VIOLET+'">M_A(F̄\') = F\'·d\'</b> (d\' = distance ⊥ de A à la droite ∥ BC passant par M). Égalité ⇒ <b>F\' = F · d_F / d\'</b>. Exercice symbolique : comparer les deux bras de levier mesurés depuis A (en fonction de a).';}},
+{t:'Mât et câble',s:4,st:'Mât OA. La traction <b style="color:#E24B4A">T̄</b> dans le câble AB a un moment par rapport à O de norme <b>72 kN·m</b>. Détermine ‖T̄‖. (12 m, 60°, mât de 30 m.)',
+ draw:function(pp){const O={x:W*0.50,y:H*0.74},scl=Math.min(W,H)*0.020;
+   const A={x:O.x+30*Math.cos(60*D2R)*scl,y:O.y-30*Math.sin(60*D2R)*scl},B={x:O.x-12*scl,y:O.y};
+   ctx.strokeStyle=AX;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(B.x-30,O.y);ctx.lineTo(O.x+40,O.y);ctx.stroke();
+   ctx.strokeStyle=INK;ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(O.x,O.y);ctx.lineTo(A.x,A.y);ctx.stroke();
+   ctx.strokeStyle='#7f8790';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(A.x,A.y);ctx.lineTo(B.x,B.y);ctx.stroke();
+   const uAB={x:(B.x-A.x),y:(B.y-A.y)},lab=Math.hypot(uAB.x,uAB.y);uAB.x/=lab;uAB.y/=lab;arrow(A.x,A.y,uAB.x*54,uAB.y*54,RED,'T̄',3);
+   pivot(O.x,O.y);ctx.fillStyle=INK;ctx.font='600 12px system-ui';ctx.textAlign='center';ctx.fillText('A',A.x+10,A.y);ctx.fillText('B',B.x-12,B.y+4);
+   ctx.fillStyle=GREY;ctx.font='11px system-ui';ctx.fillText('12 m',(O.x+B.x)/2,O.y+16);ctx.fillText('60°',O.x+22,O.y-8);ctx.fillText('30 m',(O.x+A.x)/2+14,(O.y+A.y)/2);
+   if(pp>0){const H0=foot(O,A,uAB);ctx.strokeStyle=GREEN;ctx.lineWidth=2.4;ctx.beginPath();ctx.moveTo(O.x,O.y);ctx.lineTo(H0.x,H0.y);ctx.stroke();ctx.fillStyle=GREEN;ctx.font='600 11px ui-monospace';ctx.fillText('d',(O.x+H0.x)/2+8,(O.y+H0.y)/2);}},
+ sol:function(){const Aw={x:30*Math.cos(60*D2R),y:30*Math.sin(60*D2R)};const ux=-12-Aw.x,uy=-Aw.y,l=Math.hypot(ux,uy);const cross=Math.abs((-Aw.x)*uy-(-Aw.y)*ux)/l;const T=72/cross;
+   return 'Méthode simple : <b style="color:'+ORANGE+'">|M_O(T̄)| = ‖T̄‖ · d</b>, d = distance ⊥ de O à la droite AB. On lit d (≈ '+cross.toFixed(1)+' m avec ces cotes), puis <b>‖T̄‖ = 72 / '+cross.toFixed(1)+' ≈ '+T.toFixed(1)+' kN</b>. Le point clé : trouver d, pas décomposer T̄.';}},
+{t:'Poutre coudée',s:4,sl:{lab:'θ',min:0,max:90,step:1,val:30,unit:'°'},
+ st:'Poutre coudée ABC (AB = 0,8 m horizontal, BC = 0,6 m vertical). <b style="color:#E24B4A">F̄ = 2 kN</b> en C fait l\'angle θ avec Oy. Trouve θ pour (a) M_A = 0, (b) |M_A| = 1,1 kN·m.',
+ draw:function(pp){const th=this.sl.val*D2R,sc=Math.min(W,H)*0.42;
+   const A={x:W*0.36,y:H*0.24},B={x:A.x+0.8*sc,y:A.y},C={x:B.x,y:B.y+0.6*sc};
+   ctx.strokeStyle=INK;ctx.lineWidth=1;for(let i=0;i<7;i++){ctx.beginPath();ctx.moveTo(A.x-14,A.y-10+i*4);ctx.lineTo(A.x,A.y-16+i*4);ctx.stroke();}
+   ctx.strokeStyle=INK;ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(A.x,A.y);ctx.lineTo(B.x,B.y);ctx.lineTo(C.x,C.y);ctx.stroke();
+   ctx.fillStyle=INK;ctx.font='600 13px system-ui';ctx.textAlign='center';ctx.fillText('A',A.x-10,A.y-6);ctx.fillText('B',B.x+10,B.y-6);ctx.fillText('C',C.x+12,C.y+4);
+   ctx.fillStyle=GREY;ctx.font='11px system-ui';ctx.fillText('0,8 m',(A.x+B.x)/2,A.y-8);ctx.fillText('0,6 m',B.x+16,(B.y+C.y)/2);pivot(A.x,A.y,'A');
+   ctx.strokeStyle=AX;ctx.setLineDash([3,3]);ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(C.x,C.y);ctx.lineTo(C.x,C.y-46);ctx.stroke();ctx.setLineDash([]);
+   const fdir={x:-Math.sin(th),y:-Math.cos(th)};arrow(C.x,C.y,fdir.x*64,fdir.y*64,RED,'F̄',3);
+   ctx.strokeStyle=GREY;ctx.lineWidth=1.2;ctx.beginPath();ctx.arc(C.x,C.y,26,-Math.PI/2,-Math.PI/2-th,true);ctx.stroke();ctx.fillStyle=GREY;ctx.fillText('θ',C.x-14,C.y-24);
+   if(pp>0){const H0=foot(A,C,fdir);ctx.strokeStyle='#d8b0b0';ctx.setLineDash([5,5]);ctx.lineWidth=1.1;ctx.beginPath();ctx.moveTo(C.x-fdir.x*40,C.y-fdir.y*40);ctx.lineTo(H0.x+fdir.x*20,H0.y+fdir.y*20);ctx.stroke();ctx.setLineDash([]);
+     ctx.strokeStyle=GREEN;ctx.lineWidth=2.2;ctx.beginPath();ctx.moveTo(A.x,A.y);ctx.lineTo(H0.x,H0.y);ctx.stroke();}
+   const MA=1.6*Math.cos(th)-1.2*Math.sin(th);ctx.fillStyle=Math.abs(MA)<0.05?GREEN:INK;ctx.font='600 13px ui-monospace';ctx.textAlign='left';ctx.fillText('M_A = '+MA.toFixed(2)+' kN·m',W*0.06,H*0.92);},
+ sol:function(){return 'Avec A=(0,0), C=(0,8 ; −0,6) et F̄=(−2sinθ ; 2cosθ) : <b>M_A = 1,6·cosθ − 1,2·sinθ</b> (kN·m).<br><b style="color:'+GREEN+'">(a) M_A = 0</b> ⇒ tanθ = 4/3 ⇒ <b>θ ≈ 53,1°</b>.<br><b style="color:'+ORANGE+'">(b) |M_A| = 1,1</b> : 1,6cosθ−1,2sinθ = 2·cos(θ+36,9°) ⇒ <b>θ ≈ 19,8°</b> ou <b>θ ≈ 86,5°</b>. (Max = 2 kN·m quand F̄ ⟂ AC.)';}}
 ];
 
-// ================= MENU (cartes + aperçus) =================
 const LV=[['Niveau ★','lv1'],['Niveau ★★','lv1'],['Niveau ★★★','lv2'],['Niveau ★★★★','lv3'],['Niveau ★★★★★','lv4']];
-function buildMenu(){
-  const grid=document.getElementById('grid');
-  const mainCtx=ctx,mW=W,mH=H;
-  EX.forEach(function(ex,i){
-    const card=document.createElement('div');card.className='card';
+function buildMenu(){const grid=document.getElementById('grid'),mainCtx=ctx,mW=W,mH=H;
+  EX.forEach(function(ex,i){const card=document.createElement('div');card.className='card';
     const pcv=document.createElement('canvas');pcv.width=520;pcv.height=330;
-    // rendu de l'aperçu : on redirige temporairement le contexte global
-    ctx=pcv.getContext('2d');W=520;H=330;
-    ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);
+    ctx=pcv.getContext('2d');W=520;H=330;ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);
     try{ex.draw(1);}catch(e){}
-    const cap=document.createElement('div');cap.className='cap';
-    const lv=LV[ex.s-1];
+    const cap=document.createElement('div');cap.className='cap';const lv=LV[ex.s-1];
     cap.innerHTML='<span class="num">n°'+(i+1)+'</span><div class="t">'+ex.t+'</div><span class="lv '+lv[1]+'">'+lv[0]+'</span>';
-    card.appendChild(pcv);card.appendChild(cap);
-    card.addEventListener('click',function(){openEx(i);});
-    grid.appendChild(card);
-  });
-  ctx=mainCtx;W=mW;H=mH;
-}
-
-// ================= NAVIGATION =================
-function openEx(i){idx=i;view='exo';reveal=false;p=0;axesChoice=0;
-  document.getElementById('menu').style.display='none';
-  document.getElementById('exo').style.display='block';
+    card.appendChild(pcv);card.appendChild(cap);card.addEventListener('click',function(){openEx(i);});grid.appendChild(card);});
+  ctx=mainCtx;W=mW;H=mH;}
+function openEx(i){idx=i;view='exo';reveal=false;p=0;
+  document.getElementById('menu').style.display='none';document.getElementById('exo').style.display='block';
   document.getElementById('bSol').className='btn';document.getElementById('bSol').textContent='Voir la solution';
-  W=0;H=0; // force resync du canvas
-  refreshUI();window.scrollTo(0,0);}
-function backMenu(){view='menu';
-  document.getElementById('exo').style.display='none';
-  document.getElementById('menu').style.display='block';window.scrollTo(0,0);}
+  W=0;H=0;refreshUI();window.scrollTo(0,0);}
+function backMenu(){view='menu';document.getElementById('exo').style.display='none';document.getElementById('menu').style.display='block';window.scrollTo(0,0);}
 function refreshUI(){const ex=EX[idx];
-  document.getElementById('cnt').textContent='Exercice '+(idx+1)+'/'+EX.length+' — '+ex.t+' '+'★'.repeat(ex.s);
-  document.getElementById('stmt').innerHTML=ex.st;
-  document.getElementById('bAxes').style.display=ex.axesBtn?'inline-block':'none';
-  cvMain.style.cursor=ex.d3?'grab':'default';
+  document.getElementById('cnt').textContent='Exercice '+(idx+1)+'/'+EX.length+' — '+'★'.repeat(ex.s);
+  document.getElementById('stmt').innerHTML='<b>'+ex.t+'.</b> '+ex.st;
   const rs=document.getElementById('rowSl');
-  if(ex.sl){rs.style.display='flex';
-    const s=document.getElementById('sl');s.min=ex.sl.min;s.max=ex.sl.max;s.step=ex.sl.step;s.value=ex.sl.val;
-    document.getElementById('slLab').textContent=ex.sl.lab;
-    document.getElementById('slV').textContent=ex.sl.val+ex.sl.unit;
-  } else rs.style.display='none';
-  updateInfo();}
-function updateInfo(){const ex=EX[idx];
-  document.getElementById('info').innerHTML=reveal?ex.sol():'À toi : écris les composantes sur papier, puis clique « Voir la solution » pour voir la décomposition animée.';}
-function go(d){idx=(idx+EX.length+d)%EX.length;reveal=false;p=0;axesChoice=0;
-  document.getElementById('bSol').className='btn';document.getElementById('bSol').textContent='Voir la solution';refreshUI();}
-function toggleSol(){reveal=!reveal;p=0;
-  const b=document.getElementById('bSol');b.className=reveal?'btn on':'btn';b.textContent=reveal?'Cacher la solution':'Voir la solution';
-  updateInfo();}
-document.getElementById('sl').addEventListener('input',e=>{const ex=EX[idx];if(!ex.sl)return;
-  ex.sl.val=parseFloat(e.target.value);document.getElementById('slV').textContent=ex.sl.val+ex.sl.unit;if(reveal)updateInfo();});
-window.addEventListener('keydown',e=>{if(view!=='exo')return;
-  if(e.key==='ArrowRight')go(1);if(e.key==='ArrowLeft')go(-1);if(e.key==='Escape')backMenu();});
-
-// orbite souris (exercices 3D uniquement)
-let dragV=false,lX=0,lY=0;
-function gp(e){const r=cvMain.getBoundingClientRect();const t=e.touches?e.touches[0]:e;return{x:t.clientX-r.left,y:t.clientY-r.top};}
-cvMain.addEventListener('pointerdown',e=>{if(view!=='exo'||!EX[idx].d3)return;dragV=true;const p=gp(e);lX=p.x;lY=p.y;cvMain.style.cursor='grabbing';});
-cvMain.addEventListener('pointermove',e=>{if(!dragV)return;const p=gp(e);az3+=(p.x-lX)*0.01;el3=Math.max(0.15,Math.min(1.35,el3+(p.y-lY)*0.01));lX=p.x;lY=p.y;});
-window.addEventListener('pointerup',()=>{dragV=false;if(view==='exo'&&EX[idx]&&EX[idx].d3)cvMain.style.cursor='grab';});
-
-function loop(){
-  if(view==='exo'){syncSize();tGlob++;ctx.clearRect(0,0,W,H);ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);
-    if(reveal&&p<1)p=Math.min(1,p+0.03);
-    EX[idx].draw(p);}
-  requestAnimationFrame(loop);}
+  if(ex.sl){rs.style.display='flex';const s=document.getElementById('sl');s.min=ex.sl.min;s.max=ex.sl.max;s.step=ex.sl.step;s.value=ex.sl.val;
+    document.getElementById('slLab').textContent=ex.sl.lab;document.getElementById('slV').textContent=ex.sl.val+ex.sl.unit;}
+  else rs.style.display='none';updateInfo();}
+function updateInfo(){const ex=EX[idx];document.getElementById('info').innerHTML=reveal?ex.sol():'À toi : cherche le moment sur papier, puis clique « Voir la solution » pour la décomposition animée.';}
+function go(d){idx=(idx+EX.length+d)%EX.length;reveal=false;p=0;document.getElementById('bSol').className='btn';document.getElementById('bSol').textContent='Voir la solution';refreshUI();}
+function toggleSol(){reveal=!reveal;p=0;const b=document.getElementById('bSol');b.className=reveal?'btn on':'btn';b.textContent=reveal?'Cacher la solution':'Voir la solution';updateInfo();}
+document.getElementById('sl').addEventListener('input',e=>{const ex=EX[idx];if(!ex.sl)return;ex.sl.val=parseFloat(e.target.value);document.getElementById('slV').textContent=ex.sl.val+ex.sl.unit;if(reveal)updateInfo();});
+window.addEventListener('keydown',e=>{if(view!=='exo')return;if(e.key==='ArrowRight')go(1);if(e.key==='ArrowLeft')go(-1);if(e.key==='Escape')backMenu();});
+function loop(){if(view==='exo'){syncSize();tGlob++;ctx.clearRect(0,0,W,H);ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);if(reveal&&p<1)p=Math.min(1,p+0.03);EX[idx].draw(p);}requestAnimationFrame(loop);}
 buildMenu();loop();
 </script>
